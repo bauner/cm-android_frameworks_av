@@ -139,11 +139,7 @@ endif
 endif
 endif
 
-ifeq ($(TARGET_BOARD_PLATFORM),omap4)
-LOCAL_CFLAGS := -DBOARD_CANT_REALLOCATE_OMX_BUFFERS
-endif
-
-ifeq ($(TARGET_BOARD_PLATFORM),exynos4)
+ifeq ($(TARGET_BOARD_PLATFORM),omap4 s5pc110 exynos4)
 LOCAL_CFLAGS := -DBOARD_CANT_REALLOCATE_OMX_BUFFERS
 endif
 
@@ -230,7 +226,8 @@ LOCAL_CFLAGS += -DUSE_SAMSUNG_COLORFORMAT
 
 # Include native color format header path
 LOCAL_C_INCLUDES += \
-	$(TOP)/$(TARGET_HAL_PATH)/include
+        $(TOP)/$(TARGET_HAL_PATH)/include
+
 endif
 
 LOCAL_MODULE:= libstagefright

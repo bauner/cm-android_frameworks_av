@@ -1,4 +1,4 @@
-/*Copyright (c) 2013 - 2014, The Linux Foundation. All rights reserved.
+/*Copyright (c) 2013 - 2015, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -736,6 +736,14 @@ sp<MetaData> ExtendedUtils::MakeHEVCCodecSpecificData(const sp<ABuffer> &accessU
     meta->setInt32(kKeyWidth, (int32_t)177);
     meta->setInt32(kKeyHeight, (int32_t)144);
 
+    // Let the decoder do the frame parsing for HEVC in case access unit data is
+    // not aligned to frame boundaries.
+    meta->setInt32(kKeyUseArbitraryMode, 1);
+
+    // Set the container format as TS, so that timestamp reordering can be
+    // enabled for HEVC TS clips.
+    meta->setCString(kKeyFileFormat, MEDIA_MIMETYPE_CONTAINER_MPEG2TS);
+
     return meta;
 }
 
@@ -885,16 +893,6 @@ void ExtendedUtils::ShellProp::getRtpPortRange(unsigned *start, unsigned *end) {
     }
 
     ALOGV("rtp port_start = %u, port_end = %u", *start, *end);
-}
-
-bool ExtendedUtils::ShellProp::isCustomHLSEnabled() {
-    bool retVal = false;
-    char customHLS[PROPERTY_VALUE_MAX];
-    property_get("persist.sys.media.hls-custom", customHLS, "0");
-    if (atoi(customHLS)) {
-        retVal = true;
-    }
-    return retVal;
 }
 
 void ExtendedUtils::setBFrames(
@@ -1968,6 +1966,10 @@ void ExtendedUtils::overWriteAudioFormat(
     int32_t schannels = 0;
     int32_t drate = 0;
     int32_t srate = 0;
+    int32_t dmask = 0;
+    int32_t smask = 0;
+    int32_t scmask = 0;
+    int32_t dcmask = 0;
 
     dst->findInt32("channel-count", &dchannels);
     src->findInt32("channel-count", &schannels);
@@ -1975,8 +1977,16 @@ void ExtendedUtils::overWriteAudioFormat(
     dst->findInt32("sample-rate", &drate);
     src->findInt32("sample-rate", &srate);
 
-    ALOGI("channel count src: %d dst: %d", dchannels, schannels);
-    ALOGI("sample rate src: %d dst:%d ", drate, srate);
+    dst->findInt32("channel-mask", &dmask);
+    src->findInt32("channel-mask", &smask);
+
+    ALOGI("channel count src: %d dst: %d", schannels, dchannels);
+    ALOGI("sample rate src: %d dst:%d ", srate, drate);
+
+    scmask = audio_channel_count_from_out_mask(smask);
+    dcmask = audio_channel_count_from_out_mask(dmask);
+    ALOGI("channel mask src: %d dst:%d ", smask, dmask);
+    ALOGI("channel count from mask src: %d dst:%d ", scmask, dcmask);
 
     if (schannels && dchannels != schannels) {
         dst->setInt32("channel-count", schannels);
@@ -1984,6 +1994,10 @@ void ExtendedUtils::overWriteAudioFormat(
 
     if (srate && drate != srate) {
         dst->setInt32("sample-rate", srate);
+    }
+
+    if (dmask != smask) {
+        dst->setInt32("channel-mask", smask);
     }
 
     return;
@@ -2100,10 +2114,6 @@ bool ExtendedUtils::ShellProp::isSmoothStreamingEnabled() {
 void ExtendedUtils::ShellProp::getRtpPortRange(unsigned *start, unsigned *end) {
     *start = kDefaultRtpPortRangeStart;
     *end = kDefaultRtpPortRangeEnd;
-}
-
-bool ExtendedUtils::ShellProp::isCustomHLSEnabled() {
-    return false; 
 }
 
 void ExtendedUtils::setBFrames(

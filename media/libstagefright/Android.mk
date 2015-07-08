@@ -139,8 +139,8 @@ endif
 endif
 endif
 
-ifeq ($(TARGET_BOARD_PLATFORM),omap4 s5pc110 exynos4)
-LOCAL_CFLAGS := -DBOARD_CANT_REALLOCATE_OMX_BUFFERS
+ifeq ($(TARGET_BOARD_PLATFORM),omap4)
+LOCAL_CFLAGS += -DBOARD_CANT_REALLOCATE_OMX_BUFFERS
 endif
 
 #QTI FLAC Decoder
@@ -149,7 +149,7 @@ LOCAL_C_INCLUDES += $(TARGET_OUT_HEADERS)/mm-audio
 ifeq ($(strip $(AUDIO_FEATURE_ENABLED_EXTN_FLAC_DECODER)),true)
 LOCAL_SRC_FILES += FLACDecoder.cpp
 LOCAL_C_INCLUDES += $(TARGET_OUT_HEADERS)/mm-audio/audio-flac
-LOCAL_CFLAGS := -DQTI_FLAC_DECODER
+LOCAL_CFLAGS += -DQTI_FLAC_DECODER
 endif
 endif
 
@@ -226,8 +226,8 @@ LOCAL_CFLAGS += -DUSE_SAMSUNG_COLORFORMAT
 
 # Include native color format header path
 LOCAL_C_INCLUDES += \
-        $(TOP)/$(TARGET_HAL_PATH)/include
-
+	$(TOP)/hardware/samsung/exynos4/hal/include \
+	$(TOP)/hardware/samsung/exynos4/include
 endif
 
 LOCAL_MODULE:= libstagefright

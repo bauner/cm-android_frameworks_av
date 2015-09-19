@@ -9717,4 +9717,3 @@ bool AudioPolicyManager::isValidAttributes(const audio_attributes_t *paa) {
 }
 
 }; // namespace android
-

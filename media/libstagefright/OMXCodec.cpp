@@ -1717,17 +1717,11 @@ status_t OMXCodec::setVideoOutputFormat(
                 && colorFormat != OMX_COLOR_FormatUnused
                 && colorFormat != format.eColorFormat) {
 
-            OMX_U32 index = 1; // Index 0 is retrieved above.
-            while (index < kMaxColorFormatSupported) {
-                format.nIndex = index++;
+            while (OMX_ErrorNoMore != err) {
+                format.nIndex++;
                 err = mOMX->getParameter(
                         mNode, OMX_IndexParamVideoPortFormat,
                             &format, sizeof(format));
-                if (OK != err) {
-                    format.eColorFormat = OMX_COLOR_FormatUnused;
-                    break;
-                }
-
                 if (format.eColorFormat == colorFormat) {
                     break;
                 }
@@ -2100,6 +2094,9 @@ status_t OMXCodec::allocateBuffersOnPort(OMX_U32 portIndex) {
             def.nBufferCountActual, def.nBufferSize,
             portIndex == kPortIndexInput ? "input" : "output");
 
+    if (def.nBufferSize != 0 && def.nBufferCountActual > SIZE_MAX / def.nBufferSize) {
+        return BAD_VALUE;
+    }
 #ifdef MTK_HARDWARE
     OMX_U32 memoryAlign = 32;
     size_t totalSize = def.nBufferCountActual *

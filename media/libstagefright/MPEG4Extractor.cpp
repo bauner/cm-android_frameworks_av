@@ -3325,11 +3325,13 @@ MPEG4Source::MPEG4Source(
 
         const uint8_t *ptr = (const uint8_t *)data;
 
-        CHECK(size >= 7);
-        CHECK_EQ((unsigned)ptr[0], 1u);  // configurationVersion == 1
-
-        // The number of bytes used to encode the length of a NAL unit.
-        mNALLengthSize = 1 + (ptr[4] & 3);
+        if (size < 7 || ptr[0] != 1) {
+            ALOGE("Invalid AVCC atom, size %zu, configurationVersion: %d",
+                    size, ptr[0]);
+        } else {
+            // The number of bytes used to encode the length of a NAL unit.
+            mNALLengthSize = 1 + (ptr[4] & 3);
+        }
     } else if (mIsHEVC) {
         uint32_t type;
         const void *data;
@@ -4573,7 +4575,15 @@ status_t MPEG4Source::fragmentedRead(
                     continue;
                 }
 
-                CHECK(dstOffset + 4 <= mBuffer->size());
+                if (dstOffset > SIZE_MAX - 4 ||
+                        dstOffset + 4 > SIZE_MAX - nalLength ||
+                        dstOffset + 4 + nalLength > mBuffer->size()) {
+                    ALOGE("b/26365349 : %zu %zu", dstOffset, mBuffer->size());
+                    android_errorWriteLog(0x534e4554, "26365349");
+                    mBuffer->release();
+                    mBuffer = NULL;
+                    return ERROR_MALFORMED;
+                }
 
                 dstData[dstOffset++] = 0;
                 dstData[dstOffset++] = 0;

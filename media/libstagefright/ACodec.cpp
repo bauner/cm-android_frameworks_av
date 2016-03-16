@@ -1315,6 +1315,7 @@ void ACodec::setNativeWindowColorFormat(OMX_COLOR_FORMATTYPE &eNativeColorFormat
     if (!strcasecmp(mComponentName.c_str(), "OMX.SEC.AVC.Decoder")
         || !strcasecmp(mComponentName.c_str(), "OMX.SEC.FP.AVC.Decoder")
         || !strcasecmp(mComponentName.c_str(), "OMX.SEC.MPEG4.Decoder")
+        || !strcasecmp(mComponentName.c_str(), "OMX.SEC.M4V.Decoder") 
         || !strcasecmp(mComponentName.c_str(), "OMX.Exynos.AVC.Decoder")) {
         switch (eNativeColorFormat) {
             case OMX_COLOR_FormatYUV420SemiPlanar:
